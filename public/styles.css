@@ -82,10 +82,10 @@ body {
   grid-row-gap: 20px;
   grid-column-gap: 20px;
   grid-template-rows: 130px 130px;
-  grid-template-columns: repeat(1fr, 8);
+  grid-template-columns: repeat(1fr, 7);
   grid-template-areas:
-    "a a b b b c c c"
-    "a a d d d c c c";
+    "a a b b e c c"
+    "a a d d d c c";
 }
 
 @media screen and (min-width: 901px) {
@@ -126,6 +126,13 @@ body {
   background-size: contain;
   background-position: center;
 }
+.header-laptop-logo-2 {
+  background: url("/impatient.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+
 .header-laptop-2 {
   grid-area: b;
   background: #65686b;
@@ -389,4 +396,22 @@ button {
   text-align: center;
   font-size: 0.8rem;
   margin-bottom: 1rem;
+}
+
+.rule-box {
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.rule-1 {
+  width: 50px;
+  background: #fffbfe;
+  height: 2px;
+}
+
+.rule-2 {
+  width: 100%;
+  background: #fffbfe;
+  height: 2px;
 }

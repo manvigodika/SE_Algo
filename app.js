@@ -199,7 +199,10 @@ app.get("/search", (req, res) => {
       s += BM25;
     });
 
-    const titSim = stringSimilarity.compareTwoStrings(titles[i], query);
+    const titSim = stringSimilarity.compareTwoStrings(
+      titles[i],
+      query.toLowerCase()
+    );
     s *= titSim;
 
     arr.push({ id: i, sim: s });
