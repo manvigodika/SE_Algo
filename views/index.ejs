@@ -36,11 +36,11 @@
       <div class="header-laptop-container">
         <div class="header-laptop-1">
           <div class="header-laptop-1-container">
-            <div class="header-laptop-1-1">Stuck</div>
-            <div class="header-laptop-1-2">
+            <div class="header-laptop-1-1">Stuck ?</div>
+            <!-- <div class="header-laptop-1-2">
               <div>?</div>
               <div class="header-laptop-logo-2"></div>
-            </div>
+            </div> -->
           </div>
         </div>
         <div class="header-laptop-2">
@@ -50,7 +50,7 @@
           </h1>
         </div>
         <div class="header-laptop-4">
-          <div class="header-laptop-1-container">
+          <div class="header-laptop-6-container">
             <div class="header-laptop-1-1">Code</div>
             <div class="header-laptop-1-2">
               <div>it.</div>
@@ -91,7 +91,19 @@
       </div>
     </section>
 
+    <section class="no-results">
+      <h1>Oops! Try searching something else</h1>
+    </section>
+
     <section class="results">
+      <div class="question">
+        <div class="title">
+          <a href="#" target="_blank"></a>
+        </div>
+        <div class="body">
+          <p></p>
+        </div>
+      </div>
       <div class="question">
         <div class="title">
           <a href="#" target="_blank"></a>
@@ -199,6 +211,7 @@
       const loadingSection = document.querySelector(".loading-div");
       const questionLinks = document.querySelectorAll(".title");
       const questionText = document.querySelectorAll(".body");
+      const noResultsDiv = document.querySelector(".no-results");
       // console.log(questionLinks);
       // console.log(questionText);
       form.addEventListener("submit", async (e) => {
@@ -206,6 +219,7 @@
 
         loadingSection.style.display = "block";
         resultSection.style.display = "none";
+        noResultsDiv.style.display = "none";
 
         for (let i = 0; i < questionLinks.length; i++) {
           questionLinks[i].querySelector("a").innerHTML = "";
@@ -221,14 +235,19 @@
 
           loadingSection.style.display = "none";
 
-          resultSection.style.display = "grid";
-          for (let i = 0; i < 5; i++) {
-            questionLinks[i].querySelector("a").innerHTML = data[i].title;
-            questionLinks[i]
-              .querySelector("a")
-              .setAttribute("href", `/question/${data[i].id}`);
-            questionText[i].querySelector("p").innerHTML = data[i].problem;
+          if (data.length === 0) {
+            noResultsDiv.style.display = "block";
+          } else {
+            resultSection.style.display = "grid";
+            for (let i = 0; i < questionLinks.length; i++) {
+              questionLinks[i].querySelector("a").innerHTML = data[i].title;
+              questionLinks[i]
+                .querySelector("a")
+                .setAttribute("href", `/question/${data[i].id}`);
+              questionText[i].querySelector("p").innerHTML = data[i].problem;
+            }
           }
+
           console.log(data);
         } catch (error) {
           alert(error);

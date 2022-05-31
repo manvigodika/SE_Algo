@@ -210,8 +210,10 @@ app.get("/search", (req, res) => {
 
   arr.sort((a, b) => b.sim - a.sim);
   let response = [];
+  let nonZero = 0;
   // console.log("REACHED");
   for (let i = 0; i < 10; i++) {
+    if (arr[i].sim != 0) nonZero++;
     // console.log(arr[i]);
     // response.push(titles[arr[i].id]);
     const str = path.join(__dirname, "Problems");
@@ -238,7 +240,8 @@ app.get("/search", (req, res) => {
 
   // res.locals.titles = response;
   setTimeout(() => {
-    res.json(response);
+    if (nonZero) res.json(response);
+    else res.json([]);
   }, 1000);
 });
 

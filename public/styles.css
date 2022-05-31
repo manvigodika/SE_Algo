@@ -101,17 +101,22 @@ body {
   display: grid;
   align-items: center;
   /* grid-template-rows: 1fr 1fr; */
-  font-size: 5rem;
+  font-size: 4rem;
   color: #ffb0ac;
 }
 
 .header-laptop-1-container {
+  width: 100%;
+  margin-left: 2rem;
+}
+
+.header-laptop-6-container {
   width: 60%;
   margin-left: 2rem;
 }
 
 .header-laptop-1-1 {
-  width: 150px !important;
+  width: 100% !important;
 }
 
 .header-laptop-1-2 {
@@ -126,13 +131,6 @@ body {
   background-size: contain;
   background-position: center;
 }
-.header-laptop-logo-2 {
-  background: url("/impatient.png");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-}
-
 .header-laptop-2 {
   grid-area: b;
   background: #65686b;
@@ -414,4 +412,24 @@ button {
   width: 100%;
   background: #fffbfe;
   height: 2px;
+}
+
+.no-results {
+  height: 40vh;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  /* background: red; */
+  padding: 20px;
+  padding-bottom: 0;
+  color: #fffbfe;
+  text-align: center;
+  display: none;
+}
+
+@media screen and (min-width: 1090px) {
+  .no-results {
+    max-width: 800px;
+    margin-top: 2rem;
+  }
 }
