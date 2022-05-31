@@ -96,7 +96,7 @@ app.get("/search", (req, res) => {
     console.log("k", key);
     let key2 = lemmatizer.verb(key1);
     queryKeywordsNew.push(key2);
-    let spellkey1 = spellcheck.getCorrections(key1, 1);
+    let spellkey1 = spellcheck.getCorrections(key1);
     let spellkey2 = spellcheck.getCorrections(key2, 1);
     if (spellkey1.indexOf(key1) == -1) {
       spellkey1.forEach((k1) => {
