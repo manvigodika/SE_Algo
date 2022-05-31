@@ -57,6 +57,15 @@ const avgdl = 138.27125372146875;
 // Starting the Server
 const app = express();
 
+// Function to capitalize the string
+
+Object.defineProperty(String.prototype, "capitalize", {
+  value: function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+  },
+  enumerable: false,
+});
+
 // Setting EJS as our view engine
 app.set("view engine", "ejs");
 
