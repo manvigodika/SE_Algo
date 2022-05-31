@@ -7,12 +7,6 @@ for (let i = 0; i < N; i++) {
   tf[i] = new Array(0);
 }
 
-// console.log(tf);
-
-// for (let i = 0; i < N; i++) {
-//   tf[i] = new Array(W).fill(0);
-// }
-
 const TF = fs.readFileSync("TF.txt").toString();
 
 const temp = TF.split("\n");

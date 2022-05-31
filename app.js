@@ -1,28 +1,63 @@
 const express = require("express");
-const app = express();
+
+// Template Engine
 const ejs = require("ejs");
+
+// Module to remove the stopwords (is, an, the ....)
 const { removeStopwords } = require("stopword");
+
+// Module to remove the Punctuations (. , !)
 const removePunc = require("remove-punctuation");
+
+// Module for spell-check
 const natural = require("natural");
-const spellChecker = require("simple-spellchecker");
+
+// Module to remove grammer (add / adding == add)
 const lemmatizer = require("wink-lemmatizer");
-const IDF = require("./idf");
-const keywords = require("./keywords");
-const length = require("./length");
+
+// Module to convert number to words
 var converter = require("number-to-words");
-// const TFIDF = require("./TFIDF");
-let TF = require("./TF");
+
+// Modules to read file and set directory path
 const fs = require("fs");
 const path = require("path");
-const cosineSimilarity = require("./cosine_similarity");
+
+// Module to calculate Title Similarity
 const stringSimilarity = require("string-similarity");
 
+// Module to convert word to numbers
 const { wordsToNumbers } = require("words-to-numbers");
+
+/**
+ * Reading Required Arrays
+ */
+
+//Reading the IDF Array
+const IDF = require("./idf");
+
+// Reading the keywords array
+const keywords = require("./keywords");
+
+// Reading the length array
+const length = require("./length");
+
+//Reading the TF Array
+let TF = require("./TF");
+
+// Reading the titles array
 const titles = require("./titles");
+
+// Reading the urls array
 const urls = require("./urls");
+
 const N = 3023;
 const W = 27602;
 const avgdl = 138.27125372146875;
+
+// Starting the Server
+const app = express();
+
+// Function to capitalize the string
 
 Object.defineProperty(String.prototype, "capitalize", {
   value: function () {
@@ -31,36 +66,38 @@ Object.defineProperty(String.prototype, "capitalize", {
   enumerable: false,
 });
 
-let recentSearches = [];
-
+// Setting EJS as our view engine
 app.set("view engine", "ejs");
+
+// Path to our Public Assets Folder
 app.use(express.static(path.join(__dirname, "/public")));
 
-const spellcheck = new natural.Spellcheck(keywords); // MAKING DICTIONARY
-// console.log(tfidf);
+// Making a dictionary with all our keywords
+const spellcheck = new natural.Spellcheck(keywords);
+
+// GET Route to home page
 app.get("/", (req, res) => {
-  //   res.send("Hello");
   res.render("index");
 });
 
+// GET Route to perform our search
 app.get("/search", (req, res) => {
   const query = req.query.query;
   const oldString = query.split(" ");
   const newString = removeStopwords(oldString);
   newString.sort(); // newString is an array
+
   let queryKeywords = [];
 
+  // Seperates numbers from query string
   let getNum = query.match(/\d+/g);
 
-  // console.log(getNum);
-
+  //Push all the numbers and their word form to query keywords
   if (getNum) {
     getNum.forEach((num) => {
       queryKeywords.push(num);
       let numStr = converter.toWords(Number(num));
-      console.log("numStr", numStr);
       let numKeys = numStr.split("-");
-      // console.log(numKeys);
       queryKeywords.push(numStr);
 
       numKeys.forEach((key) => {
@@ -75,10 +112,12 @@ app.get("/search", (req, res) => {
   }
 
   for (let j = 0; j < newString.length; j++) {
+    // Original Keywords
     newString[j] = newString[j].toLowerCase();
     newString[j] = removePunc(newString[j]);
     if (newString[j] !== "") queryKeywords.push(newString[j]);
 
+    // Camelcasing
     var letr = newString[j].match(/[a-zA-Z]+/g);
     if (letr) {
       letr.forEach((w) => {
@@ -86,18 +125,21 @@ app.get("/search", (req, res) => {
       });
     }
 
+    //Word to Numbers
     let x = wordsToNumbers(newString[j]).toString();
     if (x != newString[j]) queryKeywords.push(x);
   }
 
+  // Grammer and Spell Check
+
   let queryKeywordsNew = queryKeywords;
   queryKeywords.forEach((key) => {
     let key1 = key;
-    console.log("k", key);
     let key2 = lemmatizer.verb(key1);
     queryKeywordsNew.push(key2);
+
     let spellkey1 = spellcheck.getCorrections(key1);
-    let spellkey2 = spellcheck.getCorrections(key2, 1);
+    let spellkey2 = spellcheck.getCorrections(key2);
     if (spellkey1.indexOf(key1) == -1) {
       spellkey1.forEach((k1) => {
         queryKeywordsNew.push(k1);
@@ -111,16 +153,13 @@ app.get("/search", (req, res) => {
         queryKeywordsNew.push(lemmatizer.verb(k2));
       });
     }
-
-    console.log(key1, key2);
-    console.log(spellkey1, spellkey2);
-
-    console.log(queryKeywordsNew);
   });
 
-  queryKeywords = queryKeywordsNew; // updating the querykeywords array
+  // Updating the querykeywords array
+  queryKeywords = queryKeywordsNew;
   console.log(queryKeywords);
-  // now we need to filter out those keywords which are present in our corpse
+
+  // Now we need to filter out those keywords which are present in our dataset
   let temp = [];
   for (let i = 0; i < queryKeywords.length; i++) {
     const id = keywords.indexOf(queryKeywords[i]);
@@ -132,29 +171,7 @@ app.get("/search", (req, res) => {
   queryKeywords = temp;
   queryKeywords.sort();
 
-  let qTF = new Array(W).fill(0);
-  let qTFIDF = new Array(W).fill(0);
-  let map = new Map();
-  queryKeywords.forEach((key) => {
-    return map.set(key, 0);
-  });
-
-  queryKeywords.forEach((key) => {
-    let cnt = map.get(key);
-    cnt++;
-    return map.set(key, cnt);
-  });
-
-  console.log(queryKeywords, "HELLO");
-
-  queryKeywords.forEach((key) => {
-    const id = keywords.indexOf(key);
-    if (id !== -1) {
-      qTF[id] = map.get(key) / queryKeywords.length;
-      qTFIDF[id] = qTF[id] * IDF[id];
-    }
-  });
-
+  //Getting Unique Query Keyword
   let temp1 = [];
   queryKeywords.forEach((key) => {
     if (temp1.indexOf(key) == -1) {
@@ -163,25 +180,23 @@ app.get("/search", (req, res) => {
   });
 
   queryKeywords = temp1;
+
+  //Getting id of every query keyword
   let qid = [];
   queryKeywords.forEach((key) => {
     qid.push(keywords.indexOf(key));
   });
 
-  // SIMILARITY OF EACH DOC WITH QUERY STRING
+  /**
+   * BM25 Algorithm
+   */
+
+  // Similarity Score of each doc with query string
   const arr = [];
 
-  // console.log(TF);
-  // console.log(qid);
-  // console.log(keywords[2907], key)
   for (let i = 0; i < N; i++) {
-    // const s = cosineSimilarity(TFIDF[i], qTFIDF);
-
-    // const titleKeywords =
-
     let s = 0;
     qid.forEach((key) => {
-      // console.log(keywords[key]);
       const idfKey = IDF[key];
       let tf = 0;
       for (let k = 0; k < TF[i].length; k++) {
@@ -195,10 +210,13 @@ app.get("/search", (req, res) => {
       const x = tfkey * (1.2 + 1);
       const y = tfkey + 1.2 * (1 - 0.75 + 0.75 * (length[i] / avgdl));
       let BM25 = (x / y) * idfKey;
+
+      //Giving Higher weightage to Leetcode and Intterview bit Problems
       if (i < 2214) BM25 *= 2;
       s += BM25;
     });
 
+    // Title Similarity
     const titSim = stringSimilarity.compareTwoStrings(
       titles[i],
       query.toLowerCase()
@@ -208,20 +226,20 @@ app.get("/search", (req, res) => {
     arr.push({ id: i, sim: s });
   }
 
+  //Sorting According to Score
   arr.sort((a, b) => b.sim - a.sim);
+
   let response = [];
   let nonZero = 0;
-  // console.log("REACHED");
+
   for (let i = 0; i < 10; i++) {
     if (arr[i].sim != 0) nonZero++;
-    // console.log(arr[i]);
-    // response.push(titles[arr[i].id]);
     const str = path.join(__dirname, "Problems");
     const str1 = path.join(str, `problem_text_${arr[i].id + 1}.txt`);
     let question = fs.readFileSync(str1).toString().split("\n");
     let n = question.length;
     let problem = "";
-    console.log(i);
+
     if (arr[i].id <= 1773) {
       problem = question[0].split("ListShare")[1] + " ";
       if (n > 1) problem += question[1];
@@ -245,6 +263,8 @@ app.get("/search", (req, res) => {
   }, 1000);
 });
 
+// GET route to question page
+
 app.get("/question/:id", (req, res) => {
   const id = Number(req.params.id);
   const str = path.join(__dirname, "Problems");
@@ -256,17 +276,10 @@ app.get("/question/:id", (req, res) => {
     text = text[1];
   }
 
-  // console.log(text.indexOf("\n"));
-
-  // text.replace("\n", "<br/>");
-
   var find = "\n";
   var re = new RegExp(find, "g");
 
   text = text.replace(re, "<br/>");
-  // console.log(text);
-
-  // console.log("Before Error");
 
   let title = titles[id];
   title = title.split("-");
@@ -287,7 +300,6 @@ app.get("/question/:id", (req, res) => {
     type,
   };
 
-  // console.log(questionObject.value);
   res.locals.questionObject = questionObject;
 
   res.locals.questionBody = text;
@@ -295,6 +307,8 @@ app.get("/question/:id", (req, res) => {
   res.locals.questionUrl = urls[id];
   res.render("question");
 });
+
+// Listining on Port
 
 const port = process.env.PORT || 3000;
 
